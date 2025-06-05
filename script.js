@@ -203,27 +203,34 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const viewportHeight = window.visualViewport.height;
         const windowHeight = window.innerHeight;
-        const keyboardHeight = windowHeight - viewportHeight;
+        const keyboardHeight = Math.max(0, windowHeight - viewportHeight);
         
         if (keyboardHeight > 0) {
             // Keyboard is open
-            document.body.style.height = `${windowHeight}px`;
-            document.body.style.overflow = 'hidden';
+            document.body.classList.add('keyboard-open');
             chatInputContainer.classList.add('keyboard-open');
-            chatInputContainer.style.position = 'fixed';
-            chatInputContainer.style.bottom = `${keyboardHeight}px`;
             
-            // Scroll chat to bottom
+            // Position input above keyboard
+            chatInputContainer.style.transform = `translateY(-${keyboardHeight}px)`;
+            chatInputContainer.style.position = 'fixed';
+            chatMessages.style.paddingBottom = `${keyboardHeight + 80}px`;
+            
+            // Scroll to input after a short delay
             setTimeout(() => {
-                chatMessages.scrollTop = chatMessages.scrollHeight;
+                chatInput.scrollIntoView({ behavior: 'smooth' });
             }, 100);
         } else {
             // Keyboard is closed
-            document.body.style.height = '';
-            document.body.style.overflow = '';
+            document.body.classList.remove('keyboard-open');
             chatInputContainer.classList.remove('keyboard-open');
-            chatInputContainer.style.position = 'sticky';
-            chatInputContainer.style.bottom = '0';
+            chatInputContainer.style.transform = 'none';
+            chatInputContainer.style.position = 'fixed';
+            chatMessages.style.paddingBottom = '';
+            
+            // Reset scroll position
+            setTimeout(() => {
+                window.scrollTo(0, 0);
+            }, 100);
         }
     }
 
@@ -233,19 +240,21 @@ document.addEventListener('DOMContentLoaded', () => {
         window.visualViewport.addEventListener('scroll', handleMobileKeyboard);
     }
 
-    // Reset input position when focus is lost
-    chatInput.addEventListener('blur', () => {
-        document.body.style.height = '';
-        document.body.style.overflow = '';
-        chatInputContainer.classList.remove('keyboard-open');
-        chatInputContainer.style.position = 'sticky';
-        chatInputContainer.style.bottom = '0';
-    });
-
     // Handle input focus
     chatInput.addEventListener('focus', () => {
-        if (window.innerHeight > window.visualViewport.height) {
-            handleMobileKeyboard();
-        }
+        setTimeout(handleMobileKeyboard, 100);
+    });
+
+    // Handle input blur
+    chatInput.addEventListener('blur', () => {
+        document.body.classList.remove('keyboard-open');
+        chatInputContainer.classList.remove('keyboard-open');
+        chatInputContainer.style.transform = 'none';
+        chatInputContainer.style.position = 'fixed';
+        chatMessages.style.paddingBottom = '';
+        
+        setTimeout(() => {
+            window.scrollTo(0, 0);
+        }, 100);
     });
 }); 
