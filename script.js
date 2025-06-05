@@ -146,6 +146,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.querySelector('.sidebar');
     
     if (menuToggle && sidebar) {
+        // Touch gesture handling
+        let touchStartX = 0;
+        let touchEndX = 0;
+        
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, false);
+        
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, false);
+        
+        function handleSwipe() {
+            const swipeThreshold = 50; // minimum distance for swipe
+            const difference = touchEndX - touchStartX;
+            
+            // Right swipe (open sidebar)
+            if (difference > swipeThreshold && touchStartX < 50) {
+                sidebar.classList.add('active');
+            }
+            // Left swipe (close sidebar)
+            else if (difference < -swipeThreshold && sidebar.classList.contains('active')) {
+                sidebar.classList.remove('active');
+            }
+        }
+
         menuToggle.addEventListener('click', () => {
             sidebar.classList.toggle('active');
         });
@@ -166,4 +193,34 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // Mobile keyboard handling
+    const chatInputContainer = document.querySelector('.chat-input-container');
+    
+    function handleMobileKeyboard() {
+        const viewportHeight = window.visualViewport.height;
+        const windowHeight = window.innerHeight;
+        
+        if (windowHeight > viewportHeight) {
+            // Keyboard is open
+            chatInputContainer.style.position = 'absolute';
+            chatInputContainer.style.bottom = '0';
+            chatInputContainer.style.transform = `translateY(-${windowHeight - viewportHeight}px)`;
+        } else {
+            // Keyboard is closed
+            chatInputContainer.style.position = 'sticky';
+            chatInputContainer.style.transform = 'none';
+        }
+    }
+
+    // Listen for viewport changes (keyboard open/close)
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', handleMobileKeyboard);
+    }
+
+    // Reset input position when focus is lost
+    chatInput.addEventListener('blur', () => {
+        chatInputContainer.style.position = 'sticky';
+        chatInputContainer.style.transform = 'none';
+    });
 }); 
