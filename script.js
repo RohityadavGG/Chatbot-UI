@@ -196,31 +196,56 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Mobile keyboard handling
     const chatInputContainer = document.querySelector('.chat-input-container');
+    const chatMessages = document.querySelector('.chat-messages');
     
     function handleMobileKeyboard() {
+        if (!window.visualViewport) return;
+        
         const viewportHeight = window.visualViewport.height;
         const windowHeight = window.innerHeight;
+        const keyboardHeight = windowHeight - viewportHeight;
         
-        if (windowHeight > viewportHeight) {
+        if (keyboardHeight > 0) {
             // Keyboard is open
-            chatInputContainer.style.position = 'absolute';
-            chatInputContainer.style.bottom = '0';
-            chatInputContainer.style.transform = `translateY(-${windowHeight - viewportHeight}px)`;
+            document.body.style.height = `${windowHeight}px`;
+            document.body.style.overflow = 'hidden';
+            chatInputContainer.classList.add('keyboard-open');
+            chatInputContainer.style.position = 'fixed';
+            chatInputContainer.style.bottom = `${keyboardHeight}px`;
+            
+            // Scroll chat to bottom
+            setTimeout(() => {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 100);
         } else {
             // Keyboard is closed
+            document.body.style.height = '';
+            document.body.style.overflow = '';
+            chatInputContainer.classList.remove('keyboard-open');
             chatInputContainer.style.position = 'sticky';
-            chatInputContainer.style.transform = 'none';
+            chatInputContainer.style.bottom = '0';
         }
     }
 
     // Listen for viewport changes (keyboard open/close)
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', handleMobileKeyboard);
+        window.visualViewport.addEventListener('scroll', handleMobileKeyboard);
     }
 
     // Reset input position when focus is lost
     chatInput.addEventListener('blur', () => {
+        document.body.style.height = '';
+        document.body.style.overflow = '';
+        chatInputContainer.classList.remove('keyboard-open');
         chatInputContainer.style.position = 'sticky';
-        chatInputContainer.style.transform = 'none';
+        chatInputContainer.style.bottom = '0';
+    });
+
+    // Handle input focus
+    chatInput.addEventListener('focus', () => {
+        if (window.innerHeight > window.visualViewport.height) {
+            handleMobileKeyboard();
+        }
     });
 }); 
